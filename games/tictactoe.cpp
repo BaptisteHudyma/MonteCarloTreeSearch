@@ -7,11 +7,11 @@ namespace MCTS {
     float Game_State::get_score() {
         int winner = this->get_winner();
         if(winner < 0)
-            return 3;
+            return 0.1;
         else if (winner == 0)
-            return 5;
+            return 0.5;
         else
-            return 10;
+            return 1;
 
     }
 
@@ -80,6 +80,10 @@ namespace MCTS {
 
     //get/set array
     void Game_State::set_board_at(unsigned int x, unsigned int y) {
+        if(x > 2 or y > 2) {
+            std::cout << x << " " << y << " must be between 0 and 2" << std::endl;
+            return;
+        }
         _board[x * 3 + y] = _turn * 2 - 1;  //-1 to 1
         this->fill_moves();
     }

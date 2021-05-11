@@ -20,7 +20,7 @@
 
 namespace MCTS {
 
-#define EXPLORATION_SCORE 10.5
+#define EXPLORATION_SCORE 100.5
 
 /*
  *
@@ -162,9 +162,10 @@ class Node {
         //friend ostream& operator<<(ostream& os, const Node& n);
 
     private:
-        Node* _parent;       //reference to parent
-        std::list<Node*> _children;    //Children of this node
+        std::vector<unsigned int> _unexploredChildren;    //dynamic array with    
 
+        Node* _parent;              //reference to parent
+        std::list<Node*> _children; //Children of this node
         unsigned int _visitCount;   //Child visits sum
         float _rewardValue;         //Child reward sum
         unsigned int _moveIndex;    //_state index
