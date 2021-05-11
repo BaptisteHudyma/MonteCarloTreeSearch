@@ -4,18 +4,24 @@ project(MCTS)
 
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_FLAGS "-O2")
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
 
 set(SRC src)
+set(GAMES games)
 
 include_directories(
     ${SRC}
+    ${GAMES}
 )
 
 add_executable(mcts
     main.cpp
+)
+
+add_library(Games
+    ${GAMES}/tictactoe/tictactoe.cpp
 )
 
 add_library(TreeSearch
@@ -26,6 +32,7 @@ add_library(TreeSearch
 
 target_link_libraries(mcts
     TreeSearch
+    Games
 )
 
 

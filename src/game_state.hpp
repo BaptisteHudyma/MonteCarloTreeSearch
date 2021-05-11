@@ -26,7 +26,6 @@ namespace MCTS {
  */
 class IGame_State {
     public:
-
         /**
          * \brief   Return the score associated with this game state 
          *
@@ -41,15 +40,6 @@ class IGame_State {
         virtual bool is_game_over() = 0;
 
         /**
-         * \brief       Make an action. The index must be in [0, get_move_count()[
-         *
-         * \param[in]   index The index of the action to execute
-         * \return      An instantiation of a new IGame_State object after the action
-         */
-        virtual IGame_State* do_move(unsigned int index) = 0;
-
-
-        /**
          * \brief   Compute the possible actions after this game state 
          *
          * \return  A count of possible actions after this node, that will be use as indexes
@@ -57,14 +47,27 @@ class IGame_State {
         virtual unsigned int get_move_count() = 0;
 
         /**
-         * \brief Overload of operator << used to display this game state
+         * \brief       Make an action. The index must be in [0, get_move_count()[
+         *
+         * \param[in]   index The index of the action to execute
+         * \return      An instantiation of a new IGame_State object after the action
          */
-        //virtual std::ostream& operator<<(std::ostream& os) = 0;
+        virtual IGame_State* do_move(unsigned int index) = 0;
 
+        /**
+         * \brief Overload of operator << used to display this game state
+         * do not need to be overloaded
+         */
+        friend std::ostream& operator<<(std::ostream& os, const IGame_State& gs) {
+            gs.show(os);
+            return os;
+        }
 
     private:
         //no copy operator
         IGame_State& operator=(const IGame_State& ) = delete;
+
+        virtual void show(std::ostream& os) const = 0;
 
 };
 

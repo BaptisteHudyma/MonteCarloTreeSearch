@@ -85,7 +85,7 @@ class Node {
           *
           * \return The index of the move contained in this node
           */
-        unsigned int get_move_index();
+        unsigned int get_move_index() const;
 
 
         /**
@@ -97,36 +97,14 @@ class Node {
 
         //return this state move count
         unsigned int get_move_count();
+        //return this state game over state
+        bool is_game_over();
 
-    protected:
-        /**
-         * \brief   Basic constructor
-         *
-         * \param[in] parent    Parent node reference
-         * \param[in] gameState IGame_State object, created by the parent node
-         */
-        Node(Node* parent, IGame_State* gameState);
 
         /**
-         * \brief   Get the UCB1 score
-         * \details  Here, UCB1 is define as the reward value over the number of visits 
-         *
-         * \return This node UCB1
+         * \brief Display this node in ostream
          */
-        float get_UCB1();
-
-        /**
-         * \brief   Get the UCT score
-         * \details This score balances score and exploration to parse the tree
-         *
-         * \return  The UTC score
-         */
-        float get_UCT();
-
-        /**
-         * \brief   Return this node as a stringstream
-         */
-        std::string to_string();
+        friend std::ostream& operator<<(std::ostream& os, const Node& node);
 
         /**
          * \brief    Show this tree in cout (Can be very expansive for large trees)
@@ -143,7 +121,33 @@ class Node {
          * \param[in] maxDepth  The maximum depth at which to parse the tree
          * \param[in] index     The current level of the tree
          */
-        void show_best_node_to_string(unsigned int maxDepth, unsigned int indent);
+        void show_best_node(unsigned int maxDepth, unsigned int indent);
+        void show_best_moves(unsigned int maxDepth, unsigned int indent);
+
+    protected:
+        /**
+         * \brief   Basic constructor
+         *
+         * \param[in] parent    Parent node reference
+         * \param[in] gameState IGame_State object, created by the parent node
+         */
+        Node(Node* parent, IGame_State* gameState);
+
+        /**
+         * \brief   Get the UCB1 score
+         * \details  Here, UCB1 is define as the reward value over the number of visits 
+         *
+         * \return This node UCB1
+         */
+        float get_UCB1() const;
+
+        /**
+         * \brief   Get the UCT score
+         * \details This score balances score and exploration to parse the tree
+         *
+         * \return  The UTC score
+         */
+        float get_UCT() const;
 
 
         //friend ostream& operator<<(ostream& os, const Node& n);

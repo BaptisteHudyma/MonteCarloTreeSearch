@@ -37,7 +37,20 @@ namespace MCTS {
              *
              * \return Index of the best action, corresponding to an index in initialGameState
              */
-            unsigned int search_best_move(double timeLimit);
+            unsigned int search_best_move(unsigned int iterations);
+            
+            /**
+              *
+              *
+              *
+              */
+            void show_tree(unsigned int maxDepth);
+            void show_best_path(unsigned int maxDepth);
+            void show_best_moves(unsigned int maxDepth);
+
+
+            ~MCTS();
+
 
         protected:
 

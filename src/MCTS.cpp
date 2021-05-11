@@ -20,30 +20,32 @@ namespace MCTS {
      *
      *
      */
-    unsigned int MCTS::search_best_move(double timeLimit) {
+    unsigned int MCTS::search_best_move(unsigned int iterations) {
         //at least one iteration
         do {
             Node* currentNode = this->get_UCT_leaf();
             if(currentNode == nullptr) {
-                std::cout << "get leaf returned null" << std::endl;
+                std::cerr << "get leaf returned null" << std::endl;
                 break;
             }
 
-            std::cout << "iteration " << timeLimit  << std::endl;
             float endScore = currentNode->rollout();
             currentNode->backpropagate(endScore);
 
-            timeLimit -= 1.0;
-        } while (timeLimit > 0);
+            iterations -= 1;
+        } while (iterations > 0);
         
         //return index with best UCB
-        return _root->get_best_child_UCB()->get_move_index();
+       Node* bestChild = _root->get_best_child_UCB();
+        if(bestChild == nullptr)
+            return 0;
+        return bestChild->get_move_index();
     }
 
 
     Node* MCTS::get_UCT_leaf() {
         Node* currentNode = _root;
-        while(currentNode->get_move_count() > 0) {
+        while(not currentNode->is_game_over()) {
             //while node not an end game leaf
             
             if(not currentNode->is_fully_expanded()) { 
@@ -56,6 +58,21 @@ namespace MCTS {
         return nullptr;
     }
 
-};
+    void MCTS::show_tree(unsigned int maxDepth) {
+        _root->show_node(maxDepth, 0);
+    }
+    void MCTS::show_best_path(unsigned int maxDepth) {
+        _root->show_best_node(maxDepth, 0);
+    }
+    void MCTS::show_best_moves(unsigned int maxDepth) {
+        _root->show_best_moves(maxDepth, 0);
+    }
+
+    MCTS::~MCTS() {
+        delete _root;
+    }
+
+};  //MCTS
+
 
 
