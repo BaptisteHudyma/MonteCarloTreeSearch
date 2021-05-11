@@ -38,6 +38,9 @@ namespace MCTS {
              * \return Index of the best action, corresponding to an index in initialGameState
              */
             unsigned int search_best_move(unsigned int iterations);
+
+            //return the first best move in children 
+            Node* get_best_move();
             
             /**
               *

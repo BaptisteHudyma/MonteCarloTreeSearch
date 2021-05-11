@@ -2,15 +2,16 @@
 
 
 namespace MCTS {
+    const char Game_State::_playerMarkers[3] = {' ', 'X', 'O'};
 
     float Game_State::get_score() {
         int winner = this->get_winner();
         if(winner < 0)
-            return -1.0;
+            return 3;
         else if (winner == 0)
-            return 0.0;
+            return 5;
         else
-            return 1.0;
+            return 10;
 
     }
 
@@ -48,7 +49,7 @@ namespace MCTS {
 
     Game_State::Game_State() {
         _board.fill(0);
-        _turn = 1;
+        _turn = 0;
         this->fill_moves();
     }
     Game_State::Game_State(const Game_State* gs) {
@@ -61,6 +62,10 @@ namespace MCTS {
         _nextMoves.clear();
     }
 
+
+    void Game_State::set_turn(unsigned int turn) {
+        _turn = turn;
+    }
 
     void Game_State::fill_moves() {
         _nextMoves.clear();
@@ -138,14 +143,14 @@ namespace MCTS {
                 int boardVal = this->get_board_at(x, y);
                 switch(boardVal) {
                     case -1:
-                        os << " O | ";
+                        os << " " << Game_State::_playerMarkers[1] << " | ";
                         break;
                     case 1:
-                        os << " X | ";
+                        os << " " << Game_State::_playerMarkers[2] << " | ";
                         break;
                     case 0:
                     default:
-                        os << "   | ";
+                        os << " " << Game_State::_playerMarkers[0] << " | ";
                 }
             }
             os << std::endl;

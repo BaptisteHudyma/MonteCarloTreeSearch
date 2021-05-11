@@ -71,7 +71,7 @@ namespace MCTS {
      *
      * \return  Boolean: True if all children are explored
      */
-    bool Node::is_fully_expanded () {
+    bool Node::is_fully_expanded () const {
         return _children.size() >= _state->get_move_count();
     }
 
@@ -81,13 +81,13 @@ namespace MCTS {
      *
      * \return  The child Node object with the highest UCB1
      */
-    Node* Node::get_best_child_UCB () {
+    Node* Node::get_best_child_UCB () const {
         if(_state->is_game_over()) {
             return nullptr;
         }
 
         Node* bestChild = nullptr;
-        float bestUCB1 = -100;
+        float bestUCB1 = -10000;
         for(Node* child : _children) 
         {
             const float ucb = child->get_UCB1();
@@ -105,13 +105,13 @@ namespace MCTS {
      *
      * \return  The child Node object with the highest UCT
      */
-    Node* Node::get_best_child_UCT () {
+    Node* Node::get_best_child_UCT () const {
         if(_state->is_game_over()) {
             return nullptr;
         }
 
         Node* bestChild = nullptr;
-        float bestUCBT = -100;
+        float bestUCBT = -10000;
         for (Node* child : _children)
         {
             //if (child->nodeHasMoves and child->get_UCT() > bestUCBT) {
@@ -160,6 +160,27 @@ namespace MCTS {
             //std::cout << "score: " << endScore << std::endl;
             return endScore;
         }
+
+        void Node::rollout_expand () {
+            if(_state == nullptr) {
+                std::cerr << "Rollout invoked before filling initial state" << std::endl;
+                return;
+            }
+
+            Node* currentNode = this;
+
+            //while the game is not over
+            while(not currentNode->is_game_over()) {
+                //make a move
+                currentNode = currentNode->expand_children();
+            }
+
+            float endScore = currentNode->_state->get_score();
+            currentNode->backpropagate(endScore);
+        }
+
+
+
 
         /**
          * \fn void backpropagate (float reward);
@@ -216,13 +237,13 @@ namespace MCTS {
             }
             else if(dynamic_cast<Node*>(_parent->_parent) == nullptr) {
                 //parent's parent is null, first be first layer of the tree
-                return this->get_UCB1() + 1.4 * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount);
+                return this->get_UCB1() + EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount);
             }
             else {
                 //balance exploration and score
                 return 
                     this->get_UCB1() + 
-                    1.4 * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount) +
+                    EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount) +
                     sqrt(_parent->_visitCount) / sqrt(_visitCount);
             }
         }
@@ -264,13 +285,10 @@ namespace MCTS {
             return child;
         }
 
-        //return a string stream representing this node
-        std::ostream& operator<<(std::ostream& os, const Node& node) {
-            os << "[ UCB " << node.get_UCB1();
-
-            os << " " 
-                << node._visitCount << " "
-                << node._rewardValue;
+        std::ostream& operator<<(std::ostream& os, const Node* node) {
+            os << "[ UCB " << node->get_UCB1()
+                << " V/R: " << node->_visitCount << "/" << node->_rewardValue
+                << " U " << (node->get_move_count() - node->_children.size());
 
             //mark this path closed
             /*if(not _nodeHasMoves)
@@ -280,10 +298,15 @@ namespace MCTS {
             return os;
         }
 
-        void Node::show_node(unsigned int maxDepth, unsigned int indent) {
+        std::ostream& operator<<(std::ostream& os, const Node& node) {
+            return operator<<(os, &node);
+        }
+
+
+        void Node::show_node(unsigned int maxDepth, unsigned int indent) const {
             for(int i = 0; i < indent; ++i) 
                 std::cout << "|    ";
-            std::cout << *this << std::endl;
+            std::cout << this << std::endl;
 
             if(indent + 1 >= maxDepth)
                 return;
@@ -300,30 +323,30 @@ namespace MCTS {
          * \param[in] maxDepth Max depth of the search
          * \param[in] indent Actual depth of the current node
          */
-        void Node::show_best_node(unsigned int maxDepth, unsigned int indent) {
+        void Node::show_best_node(unsigned int maxDepth, unsigned int indent) const {
+            std::string indentStr = "";
             for(int i = 0; i < indent; ++i) 
-                std::cout << "|    ";
-            std::cout << *this << std::endl;
+                indentStr += "|\t";
+            std::cout << indentStr << this << std::endl;
 
             if(indent + 1 >= maxDepth)
                 return;
 
             Node* bestChild = this->get_best_child_UCB();
 
+            indentStr += "|\t";
             for(Node* child : _children) {
                 if(child == bestChild) {    //display best child's children
                     child->show_best_node(maxDepth, indent + 1);
                 }
                 else  {   //display child but not its children
-                    for(int i = 0; i <= indent; ++i) 
-                        std::cout << "|    ";
-                    std::cout << *child << std::endl;;
+                    std::cout << indentStr << *child << std::endl;;
                 }
             }
         }
         
-        void Node::show_best_moves(unsigned int maxDepth, unsigned int level) {
-            std::cout << *_state << std::endl;
+        void Node::show_best_moves(unsigned int maxDepth, unsigned int level) const {
+            std::cout << _state << std::endl;
 
             if(level + 1 >= maxDepth)
                 return;
@@ -338,7 +361,7 @@ namespace MCTS {
         }
 
         //return this state move count
-        unsigned int Node::get_move_count() {
+        unsigned int Node::get_move_count() const {
             return _state->get_move_count();
         }
 
@@ -347,7 +370,7 @@ namespace MCTS {
             return _moveIndex;
         }
 
-        bool Node::is_game_over() {
+        bool Node::is_game_over() const {
             return _state->is_game_over();
         }
 

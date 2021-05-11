@@ -18,9 +18,13 @@ namespace MCTS {
         }
     };
 
+
     class Game_State : public IGame_State 
     {
         public:
+            //0: no player action, 1 player 1, 2 player 2
+            static const char _playerMarkers[3];
+
             /**
              * \brief Implementation of the get_score function of the IGame_State interface
              */
@@ -54,10 +58,7 @@ namespace MCTS {
 
             ~Game_State(); 
 
-
-        protected:
-            void fill_moves();
-
+            void set_turn(unsigned int turn);
 
             /**
               * \brief Sets the value of the game board at a coordinate set to the current player value (1 for X, -1 for O)
@@ -66,6 +67,10 @@ namespace MCTS {
               * \param[in] y
               */
             void set_board_at(unsigned int x, unsigned int y);
+
+        protected:
+            void fill_moves();
+
 
 
             /**
@@ -122,6 +127,8 @@ namespace MCTS {
             int _turn;   //1 if i play, 0 if he plays
 
     };
+
+
 
 }
 

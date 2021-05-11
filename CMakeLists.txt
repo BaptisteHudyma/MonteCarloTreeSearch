@@ -21,7 +21,7 @@ add_executable(mcts
 )
 
 add_library(Games
-    ${GAMES}/tictactoe/tictactoe.cpp
+    ${GAMES}/tictactoe.cpp
 )
 
 add_library(TreeSearch

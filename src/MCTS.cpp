@@ -24,16 +24,20 @@ namespace MCTS {
         //at least one iteration
         do {
             Node* currentNode = this->get_UCT_leaf();
-            if(currentNode == nullptr) {
-                std::cerr << "get leaf returned null" << std::endl;
-                break;
+            if(currentNode != nullptr) {
+                float endScore = currentNode->rollout();
+                currentNode->backpropagate(endScore);
+                //currentNode->rollout_expand();
             }
-
-            float endScore = currentNode->rollout();
-            currentNode->backpropagate(endScore);
-
+            else {
+                //reached a closed node
+                //break;
+            }
             iterations -= 1;
-        } while (iterations > 0);
+        } while (iterations != 0);
+
+        if(iterations <= 0)
+            std::cout << "Parsed until the end" << std::endl;
         
         //return index with best UCB
        Node* bestChild = _root->get_best_child_UCB();
@@ -56,6 +60,11 @@ namespace MCTS {
         }
         //never reached an end node, should never happen 
         return nullptr;
+    }
+
+
+    Node* MCTS::get_best_move() {
+        return _root->get_best_child_UCB();
     }
 
     void MCTS::show_tree(unsigned int maxDepth) {

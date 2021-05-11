@@ -62,6 +62,14 @@ class IGame_State {
             gs.show(os);
             return os;
         }
+        /**
+         * \brief Overload of operator << used to display this game state
+         * do not need to be overloaded
+         */
+        friend std::ostream& operator<<(std::ostream& os, const IGame_State* gs) {
+            gs->show(os);
+            return os;
+        }
 
     private:
         //no copy operator

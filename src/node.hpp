@@ -20,6 +20,8 @@
 
 namespace MCTS {
 
+#define EXPLORATION_SCORE 10.5
+
 /*
  *
  *
@@ -40,14 +42,14 @@ class Node {
          *
          * \return  Boolean: True if all children where explored
          */
-        bool is_fully_expanded ();
+        bool is_fully_expanded () const;
 
         /**
          * \brief  Return the child with the highest UCB1
          *
          * \return  The child Node object with the highest UCB1
          */
-        Node* get_best_child_UCB ();
+        Node* get_best_child_UCB () const;
 
 
         /**
@@ -55,7 +57,7 @@ class Node {
          *
          * \return  The child Node object with the highest UCT
          */
-        Node* get_best_child_UCT (); 
+        Node* get_best_child_UCT () const; 
 
         /**
          * \brief   Play a full game at random from this game state until a game_over
@@ -63,6 +65,7 @@ class Node {
          * \return  The score of the final node
          */
         float rollout ();
+        void rollout_expand ();
 
         /**
          * \brief   Propagate the results from this node to parents until the root is reached
@@ -96,15 +99,20 @@ class Node {
         
 
         //return this state move count
-        unsigned int get_move_count();
+        unsigned int get_move_count() const ;
+
         //return this state game over state
-        bool is_game_over();
+        bool is_game_over() const ;
 
 
         /**
          * \brief Display this node in ostream
          */
         friend std::ostream& operator<<(std::ostream& os, const Node& node);
+        /**
+         * \brief Display this node in ostream
+         */
+        friend std::ostream& operator<<(std::ostream& os, const Node* node);
 
         /**
          * \brief    Show this tree in cout (Can be very expansive for large trees)
@@ -112,7 +120,7 @@ class Node {
          * \param[in] maxDepth  The maximum depth at which to parse the tree
          * \param[in] index     The current level of the tree
          */
-        void show_node(unsigned int maxDepth, unsigned int indent);
+        void show_node(unsigned int maxDepth, unsigned int indent) const;
 
         /**
          * \brief   Show this tree in cout (Can be very expansive for large trees)
@@ -121,9 +129,10 @@ class Node {
          * \param[in] maxDepth  The maximum depth at which to parse the tree
          * \param[in] index     The current level of the tree
          */
-        void show_best_node(unsigned int maxDepth, unsigned int indent);
-        void show_best_moves(unsigned int maxDepth, unsigned int indent);
+        void show_best_node(unsigned int maxDepth, unsigned int indent) const;
+        void show_best_moves(unsigned int maxDepth, unsigned int indent) const;
 
+        IGame_State* _state;         //This node associated IGame_State object
     protected:
         /**
          * \brief   Basic constructor
@@ -154,7 +163,6 @@ class Node {
 
     private:
         Node* _parent;       //reference to parent
-        IGame_State* _state;         //This node associated IGame_State object
         std::list<Node*> _children;    //Children of this node
 
         unsigned int _visitCount;   //Child visits sum

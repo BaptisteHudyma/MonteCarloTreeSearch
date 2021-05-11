@@ -2,25 +2,49 @@
 
 #include "MCTS.hpp"
 
-#include "tictactoe/tictactoe.hpp"
+#include "tictactoe.hpp"
 
 
 int main(int argc, char** argv) {
 
-    MCTS::Game_State* test = new MCTS::Game_State();
+    MCTS::Game_State* currentState = new MCTS::Game_State();
 
-    MCTS::MCTS monteCarloTreeSearch(test);
+    while(1) {
+        MCTS::MCTS monteCarloTreeSearch(currentState);
 
-    unsigned int bestIndex = monteCarloTreeSearch.search_best_move(1000);
+        unsigned int bestIndex = monteCarloTreeSearch.search_best_move(1000);
+        std::cout << "Best index is " << bestIndex << std::endl;
 
-    std::cout << "Best index is " << bestIndex << std::endl;
+        currentState = currentState->do_move(bestIndex); 
+        std::cout << *currentState << std::endl;
 
-    monteCarloTreeSearch.show_tree(10);
-    std::cout << std::endl;
+        if(currentState->is_game_over())
+            break;
 
-    monteCarloTreeSearch.show_best_path(10);
-    std::cout << std::endl;
+        int nextMoveX = -1;
+        std::cin >> nextMoveX;
+        int nextMoveY = -1;
+        std::cin >> nextMoveY;
 
-    monteCarloTreeSearch.show_best_moves(10);
+        currentState->set_turn(0);
+        currentState->set_board_at(nextMoveX, nextMoveY);
+
+        if(currentState->is_game_over()) {
+            std::cout << *currentState << std::endl;
+            break;
+        }
+    }
+
+    /*
+       std::cout << "Best index is " << bestIndex << std::endl;
+
+       monteCarloTreeSearch.show_best_moves(10);
+
+       monteCarloTreeSearch.show_best_path(10);
+       std::cout << std::endl;
+
+     */
+
+
     return 0;
 }
