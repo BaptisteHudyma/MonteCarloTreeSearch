@@ -18,6 +18,8 @@ namespace MCTS {
     // Basic constructor for the tree root (no parent)
     Node::Node (IGame_State* gameState) : Node(nullptr, gameState) {
         _moveIndex = 0;
+        _isClosed = false;
+        _closedChildrenCount = 0;
     }
 
     /**
@@ -52,7 +54,9 @@ namespace MCTS {
         _state = gameState;
         _moveIndex = 0;
 
-        //_nodeHasMoves = (_state->get_move_count() <= 0);  //Node if a leaf 
+        _isClosed = this->is_game_over(); 
+        _closedChildrenCount = 0;
+
         //_closedChildrenCount = 0;  
 
         //reserve space for children and unexplored node tracking
@@ -80,6 +84,39 @@ namespace MCTS {
     }
 
     /**
+     * \brief Check if all this child's children were explored
+     * 
+     * \return True if all children have been fully explored
+     */
+    bool Node::is_closed() const {
+        return _isClosed;
+    }
+
+    /**
+     * \fn Node* get_best_child ();
+     * \brief  Return the child with the highest UCB1
+     *
+     * \return  The child Node object with the highest UCB1
+     */
+    Node* Node::get_best_child () const {
+        if(_state->is_game_over()) {
+            return nullptr;
+        }
+
+        Node* bestChild = nullptr;
+        float bestUCB1 = -10000;
+        for(Node* child : _children) 
+        {
+            const float ucb = child->get_UCB1();
+            if(ucb >= bestUCB1) {
+                bestChild = child;
+                bestUCB1 = ucb;
+            }
+        }
+        return bestChild;
+    }
+
+    /**
      * \fn Node* get_best_child ();
      * \brief  Return the child with the highest UCB1
      *
@@ -94,6 +131,9 @@ namespace MCTS {
         float bestUCB1 = -10000;
         for(Node* child : _children) 
         {
+            if(child->is_closed())
+                continue;   //do not select already explored child for exploration
+
             const float ucb = child->get_UCB1();
             if(ucb >= bestUCB1) {
                 bestChild = child;
@@ -118,6 +158,9 @@ namespace MCTS {
         float bestUCBT = -10000;
         for (Node* child : _children)
         {
+            if(child->is_closed())
+                continue;   //do not select already explored child for exploration
+
             float uct = child->get_UCT();
             if (uct >= bestUCBT) {
                 bestChild = child;
@@ -198,16 +241,19 @@ namespace MCTS {
         _rewardValue += reward;
 
         //this node is maybe a leaf, check if all children are leafs and propagate to parent
-        /*if(not _nodeHasMoves) {
-          _closedChildrenCount += 1; //a calling children was closed
-          if(this->is_fully_expanded() and this->closedChildrenCount >= this->childCount) {
-        //no more children to explore and closed children >= max children count
-        if(this->parent) //force parent to check if it should close
-        this->parent->nodeHasMoves = false;
+        if(_isClosed) {
+            _closedChildrenCount += 1; //a calling children was closed
+            if(this->is_fully_expanded() and _closedChildrenCount >= _children.size()) {
+                //no more children to explore and closed children >= max children count
+                if(dynamic_cast<Node*>(_parent)) { //force parent to check if it should close
+                    _parent->_isClosed = true;
+                    _parent->backpropagate(reward);
+                }
+                return;
+            }
+            else
+                _isClosed = false;  //still some moves to test
         }
-        else
-        this->nodeHasMoves = true;  //still some moves to test
-        }*/
 
 
         if(dynamic_cast<Node*>(_parent) != nullptr) {   //propagate to parent
@@ -240,15 +286,15 @@ namespace MCTS {
             return this->get_UCB1();
         }
         //else if(dynamic_cast<Node*>(_parent->_parent) == nullptr) {
-            //parent's parent is null, first be first layer of the tree
-            return this->get_UCB1() + EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount);
+        //parent's parent is null, first be first layer of the tree
+        return this->get_UCB1() + EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount);
         /*}
-        else {
-            //balance exploration and score
-            return 
-                this->get_UCB1() + 
-                EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount) +
-                sqrt(_parent->_parent->_visitCount) / sqrt(_visitCount);
+          else {
+        //balance exploration and score
+        return 
+        this->get_UCB1() + 
+        EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount) +
+        sqrt(_parent->_parent->_visitCount) / sqrt(_visitCount);
         }*/
     }
 
@@ -264,7 +310,7 @@ namespace MCTS {
 
         //choose index in [0, _state->get_move_count()[
         unsigned int randomInt = rand() % _unexploredChildren.size();
-        
+
         //create next game state
         unsigned int indexToChoose = _unexploredChildren[randomInt];
         IGame_State* newGS = _state->do_move(indexToChoose);
@@ -287,10 +333,9 @@ namespace MCTS {
             << " U " << node->_unexploredChildren.size();
 
         //mark this path closed
-        /*if(not _nodeHasMoves)
-          thisNode << " | X ";  
-         */
-        os << " " << node->_moveIndex;
+        if(node->is_closed())
+            os << " | X ";  
+
         os << " ]";
         return os;
     }

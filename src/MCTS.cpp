@@ -34,15 +34,18 @@ namespace MCTS {
                 //break;
             }
             iterations -= 1;
-        } while (iterations != 0);
+        } while (iterations != 0 and not _root->is_closed());
+        //while first node is not closed
 
         if(iterations <= 0)
             std::cout << "Parsed until the end" << std::endl;
         
         //return index with best UCB
-       Node* bestChild = _root->get_best_child_UCB();
-        if(bestChild == nullptr)
+       Node* bestChild = this->get_best_move();
+        if(bestChild == nullptr) {
+            std::cerr << "Best child of root is null" << std::endl;
             return 0;
+        }
         return bestChild->get_move_index();
     }
 
@@ -56,7 +59,7 @@ namespace MCTS {
                 //at least a move can be made here, do it
                 return currentNode->expand_children();
             }
-            currentNode = currentNode->get_best_child_UCB();
+            currentNode = currentNode->get_best_child_UCT();
         }
         //never reached an end node, should never happen 
         return nullptr;
@@ -64,7 +67,7 @@ namespace MCTS {
 
 
     Node* MCTS::get_best_move() {
-        return _root->get_best_child_UCB();
+        return _root->get_best_child();
     }
 
     void MCTS::show_tree(unsigned int maxDepth) {

@@ -8,7 +8,7 @@
 int main(int argc, char** argv) {
 
     MCTS::Game_State* currentState = new MCTS::Game_State();
-    currentState->set_board_at(1, 1);
+    //currentState->set_board_at(1, 1);
 
     while(1) {
         MCTS::MCTS monteCarloTreeSearch(currentState);

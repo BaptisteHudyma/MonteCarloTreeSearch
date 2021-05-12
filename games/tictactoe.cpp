@@ -2,6 +2,7 @@
 
 
 namespace MCTS {
+    //set player tokens
     const char Game_State::_playerMarkers[3] = {' ', 'X', 'O'};
 
     float Game_State::get_score() {
@@ -16,14 +17,12 @@ namespace MCTS {
     }
 
     bool Game_State::is_game_over() {
-        int winner = this->get_winner();
-        if(winner != 0)
+        //if there is a winner, game over
+        if(this->get_winner() != 0)
             return true;
 
-        if(this->get_move_count() <= 0)
-            return true;
-
-        return false;
+        //grid full
+        return this->is_full();
     }
 
     unsigned int Game_State::get_move_count() {
@@ -69,13 +68,27 @@ namespace MCTS {
 
     void Game_State::fill_moves() {
         _nextMoves.clear();
-        for(unsigned int x = 0; x < 3; ++x) {
-            for(unsigned int y = 0; y < 3; ++y) {
-                if(this->get_board_at(x, y) == 0) {   //no move on this cell
-                    _nextMoves.push_back(Index(x, y));
+
+        if(not this->is_game_over()) {
+            //no winner/loser yer
+
+            for(unsigned int x = 0; x < 3; ++x) {
+                for(unsigned int y = 0; y < 3; ++y) {
+                    if(this->get_board_at(x, y) == 0) {   //no move on this cell
+                        _nextMoves.push_back(Index(x, y));
+                    }
                 }
             }
+
         }
+    }
+
+    bool Game_State::is_full() {
+        for(int i = 0; i < 9; ++i) {
+            if(_board[i] == 0)
+                return false;
+        }
+        return true;
     }
 
     //get/set array

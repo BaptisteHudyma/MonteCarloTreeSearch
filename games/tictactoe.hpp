@@ -72,6 +72,7 @@ namespace MCTS {
             void fill_moves();
 
 
+            bool is_full(); //board is full
 
             /**
               * \brief Return the value of the game board at a coordinate set
