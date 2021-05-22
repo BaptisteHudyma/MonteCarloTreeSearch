@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <memory>
 
 namespace MCTS {
 
@@ -17,9 +18,6 @@ namespace MCTS {
 
     // Basic constructor for the tree root (no parent)
     Node::Node (IGame_State* gameState) : Node(nullptr, gameState) {
-        _moveIndex = 0;
-        _isClosed = false;
-        _closedChildrenCount = 0;
     }
 
     /**
@@ -57,17 +55,10 @@ namespace MCTS {
         _isClosed = this->is_game_over(); 
         _closedChildrenCount = 0;
 
-        //_closedChildrenCount = 0;  
-
-        //reserve space for children and unexplored node tracking
-        //_children.reserve(this->childCount);
-        //_unexploredChildrenCount = _childCount;
-        //for(int i = 0; i < _childCount; i++)
-        //    _unexploredChildren.insert (std::pair<int, bool>(i, false) );
-
         _visitCount = 0;
         _rewardValue = 0.0;
 
+        //reserve space for children and unexplored node tracking
         _unexploredChildren.reserve(_state->get_move_count());
         for(unsigned int i = 0; i < _state->get_move_count(); ++i)
             _unexploredChildren.push_back(i);
@@ -108,7 +99,7 @@ namespace MCTS {
         for(Node* child : _children) 
         {
             const float ucb = child->get_UCB1();
-            if(ucb >= bestUCB1) {
+            if(ucb > bestUCB1) {
                 bestChild = child;
                 bestUCB1 = ucb;
             }
@@ -135,7 +126,7 @@ namespace MCTS {
                 continue;   //do not select already explored child for exploration
 
             const float ucb = child->get_UCB1();
-            if(ucb >= bestUCB1) {
+            if(ucb > bestUCB1) {
                 bestChild = child;
                 bestUCB1 = ucb;
             }
@@ -162,7 +153,7 @@ namespace MCTS {
                 continue;   //do not select already explored child for exploration
 
             float uct = child->get_UCT();
-            if (uct >= bestUCBT) {
+            if (uct > bestUCBT) {
                 bestChild = child;
                 bestUCBT = uct;
             }
@@ -177,43 +168,26 @@ namespace MCTS {
      * \return  The score of the final node
      */
     float Node::rollout () {
-        if(_state == nullptr) {
-            std::cerr << "Rollout invoked before filling initial state" << std::endl;
-            return 0.0;
+        if(_state->is_game_over()) {
+            return _state->get_score();
         }
 
-        IGame_State* currentRolloutState = _state;
+        unsigned int indexToExecute = rand() % _state->get_move_count();
+        std::unique_ptr<IGame_State> currentRolloutState(_state->do_move(indexToExecute));
 
         //while the game is not over
         while(not currentRolloutState->is_game_over()) {
-
             //get an available action from this game state
             unsigned int indexToExecute = rand() % currentRolloutState->get_move_count();
 
-            //make a move
-            IGame_State* nextGS = currentRolloutState->do_move(indexToExecute);
-
-            //swap values and delete current
-            if(currentRolloutState != _state)
-                delete currentRolloutState;
-            currentRolloutState = nextGS;
+            //make a move, swap values and delete current state
+            currentRolloutState = std::unique_ptr<IGame_State>(currentRolloutState->do_move(indexToExecute));
         }
 
-        float endScore = currentRolloutState->get_score();;
-
-        if(currentRolloutState != _state)
-            delete currentRolloutState;
-
-        //std::cout << "score: " << endScore << std::endl;
-        return endScore;
+        return currentRolloutState->get_score();
     }
 
     void Node::rollout_expand () {
-        if(_state == nullptr) {
-            std::cerr << "Rollout invoked before filling initial state" << std::endl;
-            return;
-        }
-
         Node* currentNode = this;
 
         //while the game is not over
@@ -232,7 +206,7 @@ namespace MCTS {
     /**
      * \fn void backpropagate (float reward);
      * \brief   Propagate the results from this node to parents until the root is reached
-     * \details Update the \a visitCount, \a rewardValue and eventually \a nodeHasMoves if we exhausted this node children moves. The call is recursive from this node to the root.
+     * \details Update the \a _visitCount, \a _rewardValue and eventually \a _isClosed if we exhausted this node children moves. The call is recursive from this node to the root.
      *
      * \param[in] reward    The reward of the leaf, propagated to the root node
      */
@@ -243,9 +217,9 @@ namespace MCTS {
         //this node is maybe a leaf, check if all children are leafs and propagate to parent
         if(_isClosed) {
             _closedChildrenCount += 1; //a calling children was closed
-            if(this->is_fully_expanded() and _closedChildrenCount >= _children.size()) {
+            if((this->is_fully_expanded() and _closedChildrenCount >= _children.size()) or is_game_over()) {
                 //no more children to explore and closed children >= max children count
-                if(dynamic_cast<Node*>(_parent)) { //force parent to check if it should close
+                if(_parent != nullptr) { //force parent to check if it should close
                     _parent->_isClosed = true;
                     _parent->backpropagate(reward);
                 }
@@ -256,7 +230,7 @@ namespace MCTS {
         }
 
 
-        if(dynamic_cast<Node*>(_parent) != nullptr) {   //propagate to parent
+        if(_parent != nullptr) {   //propagate to parent
             _parent->backpropagate(reward);
         }
     }
@@ -281,11 +255,11 @@ namespace MCTS {
      * \return  The UTC score
      */
     float Node::get_UCT() const {
-        if(dynamic_cast<Node*>(_parent) == nullptr or _visitCount <= 0) {
+        if(_parent == nullptr or _visitCount <= 0) {
             //parent is null, should be first node
             return this->get_UCB1();
         }
-        //else if(dynamic_cast<Node*>(_parent->_parent) == nullptr) {
+        //else if(_parent->_parent == nullptr) {
         //parent's parent is null, first be first layer of the tree
         return this->get_UCB1() + EXPLORATION_SCORE * sqrt( log(_parent->_visitCount) ) / sqrt(_visitCount);
         /*}
@@ -315,8 +289,11 @@ namespace MCTS {
         unsigned int indexToChoose = _unexploredChildren[randomInt];
         IGame_State* newGS = _state->do_move(indexToChoose);
 
-        std::iter_swap(_unexploredChildren.end() - 1, _unexploredChildren.begin() + randomInt);
-        _unexploredChildren.resize(_unexploredChildren.size() - 1);
+        //remove selected element
+        //std::iter_swap(_unexploredChildren.end() - 1, _unexploredChildren.begin() + randomInt);
+        //_unexploredChildren.resize(_unexploredChildren.size() - 1);
+
+        _unexploredChildren.erase(_unexploredChildren.begin() + randomInt);
 
         //create child node
         Node* child = new Node(this, newGS);
@@ -330,7 +307,8 @@ namespace MCTS {
     std::ostream& operator<<(std::ostream& os, const Node* node) {
         os << "[ UCB " << node->get_UCB1()
             << " R/V: " << node->_rewardValue << "/" << node->_visitCount
-            << " U " << node->_unexploredChildren.size();
+            << " U " << node->_unexploredChildren.size()
+            << "  " << node->_moveIndex;
 
         //mark this path closed
         if(node->is_closed())
@@ -346,7 +324,7 @@ namespace MCTS {
 
 
     void Node::show_node(unsigned int maxDepth, unsigned int indent) const {
-        for(int i = 0; i < indent; ++i) 
+        for(unsigned int i = 0; i < indent; ++i) 
             std::cout << "|    ";
         std::cout << this << std::endl;
 
@@ -367,7 +345,7 @@ namespace MCTS {
      */
     void Node::show_best_node(unsigned int maxDepth, unsigned int indent) const {
         std::string indentStr = "";
-        for(int i = 0; i < indent; ++i) 
+        for(unsigned int i = 0; i < indent; ++i) 
             indentStr += "|\t";
         std::cout << indentStr << this << std::endl;
 
@@ -415,6 +393,18 @@ namespace MCTS {
     bool Node::is_game_over() const {
         return _state->is_game_over();
     }
+
+    unsigned int Node::get_visit_count() const {
+        return _visitCount;
+    }
+    float Node::get_score() const {
+        return _rewardValue;
+    }
+
+
+
+
+
 
 
 

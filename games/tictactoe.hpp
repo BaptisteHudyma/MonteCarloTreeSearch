@@ -1,4 +1,4 @@
-#ifndef MCTS_GAME_TICTAC_TOE_CLASS_HPP
+#ifndef MCTS_GAME_TICTACTOE_CLASS_HPP
 
 #include "game_state.hpp"
 
@@ -19,7 +19,8 @@ namespace MCTS {
     };
 
 
-    class Game_State : public IGame_State 
+    class Game_State : 
+        public IGame_State 
     {
         public:
             //0: no player action, 1 player 1, 2 player 2
@@ -28,17 +29,17 @@ namespace MCTS {
             /**
              * \brief Implementation of the get_score function of the IGame_State interface
              */
-            virtual float get_score();
+            virtual float get_score() const;
             
             /**
              * \brief Implementation of the is_game_over function of the IGame_State interface
              */
-            virtual bool is_game_over();
+            virtual bool is_game_over() const;
             
             /**
              * \brief Implementation of the get_move_count function of the IGame_State interface
              */
-            virtual unsigned int get_move_count();
+            virtual unsigned int get_move_count() const;
 
             /**
              * \brief Implementation of the do_move function of the IGame_State interface
@@ -72,7 +73,7 @@ namespace MCTS {
             void fill_moves();
 
 
-            bool is_full(); //board is full
+            bool is_full() const; //board is full
 
             /**
               * \brief Return the value of the game board at a coordinate set

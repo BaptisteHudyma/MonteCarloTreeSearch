@@ -5,18 +5,17 @@ namespace MCTS {
     //set player tokens
     const char Game_State::_playerMarkers[3] = {' ', 'X', 'O'};
 
-    float Game_State::get_score() {
+    float Game_State::get_score() const {
         int winner = this->get_winner();
         if(winner < 0)
-            return 0.1;
+            return 0;
         else if (winner == 0)
             return 0.5;
-        else
-            return 1;
+        return 1;
 
     }
 
-    bool Game_State::is_game_over() {
+    bool Game_State::is_game_over() const {
         //if there is a winner, game over
         if(this->get_winner() != 0)
             return true;
@@ -25,7 +24,7 @@ namespace MCTS {
         return this->is_full();
     }
 
-    unsigned int Game_State::get_move_count() {
+    unsigned int Game_State::get_move_count() const {
         return _nextMoves.size();
     }
 
@@ -83,7 +82,7 @@ namespace MCTS {
         }
     }
 
-    bool Game_State::is_full() {
+    bool Game_State::is_full() const {
         for(int i = 0; i < 9; ++i) {
             if(_board[i] == 0)
                 return false;

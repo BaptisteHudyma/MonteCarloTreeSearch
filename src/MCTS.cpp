@@ -80,6 +80,15 @@ namespace MCTS {
         _root->show_best_moves(maxDepth, 0);
     }
 
+
+    unsigned int MCTS::get_visits() const {
+        return _root->get_visit_count();
+    }
+    float MCTS::get_score() const {
+        return _root->get_score() / _root->get_visit_count();
+    }
+
+
     MCTS::~MCTS() {
         delete _root;
     }

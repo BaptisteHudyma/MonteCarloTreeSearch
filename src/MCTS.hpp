@@ -51,6 +51,8 @@ namespace MCTS {
             void show_best_path(unsigned int maxDepth);
             void show_best_moves(unsigned int maxDepth);
 
+            unsigned int get_visits() const;
+            float get_score() const;
 
             ~MCTS();
 

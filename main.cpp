@@ -3,23 +3,26 @@
 #include "MCTS.hpp"
 
 #include "tictactoe.hpp"
+#include "puissance4.hpp"
 
 
-int main(int argc, char** argv) {
 
+void play_tictactoe(bool shouldStart = false) {
     MCTS::Game_State* currentState = new MCTS::Game_State();
-    //currentState->set_board_at(1, 1);
+
+    if(shouldStart)
+        currentState->set_board_at(0, 1);
 
     while(1) {
         MCTS::MCTS monteCarloTreeSearch(currentState);
 
-        unsigned int bestIndex = monteCarloTreeSearch.search_best_move(1000);
-        std::cout << "Best index is " << bestIndex << std::endl;
+        unsigned int bestIndex = monteCarloTreeSearch.search_best_move(300);
+        std::cout << "nodes visited : " << monteCarloTreeSearch.get_visits() << " with a score of " << monteCarloTreeSearch.get_score() << std::endl;
 
         currentState = currentState->do_move(bestIndex); 
 
         //monteCarloTreeSearch.show_best_moves(10);
-        monteCarloTreeSearch.show_best_path(10);
+        //monteCarloTreeSearch.show_best_path(10);
 
         std::cout << currentState << std::endl;
         if(currentState->is_game_over())
@@ -38,16 +41,49 @@ int main(int argc, char** argv) {
             break;
         }
     }
+}
 
-    /*
-       std::cout << "Best index is " << bestIndex << std::endl;
+void play_connect4(bool shouldStart = false) {
+    MCTS::Puissance4* currentState = new MCTS::Puissance4();
+    if(shouldStart)
+        currentState->set_board_at(3, 0);
 
-       monteCarloTreeSearch.show_best_moves(10);
+    while(1) {
+        MCTS::MCTS monteCarloTreeSearch(currentState);
 
-       monteCarloTreeSearch.show_best_path(10);
-       std::cout << std::endl;
+        unsigned int bestIndex = monteCarloTreeSearch.search_best_move(1000000);
+        std::cout << "nodes visited : " << monteCarloTreeSearch.get_visits() << " with a score of " << monteCarloTreeSearch.get_score() << std::endl;
+        monteCarloTreeSearch.show_best_path(10);
+        monteCarloTreeSearch.show_best_moves(10);
 
-     */
+        currentState = currentState->do_move(bestIndex); 
+
+        std::cout << currentState << std::endl;
+        if(currentState->is_game_over())
+            break;
+
+        int nextMoveX = -1;
+        std::cin >> nextMoveX;
+
+        currentState = currentState->do_move(nextMoveX);
+        std::cout << currentState << std::endl;
+
+        if(currentState->is_game_over()) {
+            std::cout << currentState << std::endl;
+            break;
+        }
+    }
+}
+
+
+
+int main(int argc, char** argv) {
+
+    play_connect4();
+    //play_tictactoe();
+
+    //monteCarloTreeSearch.show_best_moves(10);
+    //monteCarloTreeSearch.show_best_path(10);
 
 
     return 0;

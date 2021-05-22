@@ -20,7 +20,7 @@
 
 namespace MCTS {
 
-#define EXPLORATION_SCORE 100.5
+#define EXPLORATION_SCORE 1.5
 
     /*
      *
@@ -30,6 +30,10 @@ namespace MCTS {
      */
     class Node {
         public:
+            unsigned int get_visit_count() const;
+            float get_score() const;
+
+
             /**
              * \brief   Basic constructor for the tree root (no parent)
              *

@@ -26,25 +26,27 @@ namespace MCTS {
  */
 class IGame_State {
     public:
+        virtual ~IGame_State() {};
+
         /**
          * \brief   Return the score associated with this game state 
          *
          * \return  A score describing the current game state. The higher the score, the better the action.
          */
-        virtual float get_score() = 0;
+        virtual float get_score() const = 0;
 
         /**
          *
          * \return  A boolean True if there is no more actions possible from this game state
          */
-        virtual bool is_game_over() = 0;
+        virtual bool is_game_over() const = 0;
 
         /**
          * \brief   Compute the possible actions after this game state 
          *
          * \return  A count of possible actions after this node, that will be use as indexes
          */
-        virtual unsigned int get_move_count() = 0;
+        virtual unsigned int get_move_count() const = 0;
 
         /**
          * \brief       Make an action. The index must be in [0, get_move_count()[
